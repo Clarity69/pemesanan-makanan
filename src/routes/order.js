@@ -4,7 +4,8 @@ const router = express.Router();
 let menu = [
   { id: 1, nama: 'Nasi Goreng', harga: 20000 },
   { id: 2, nama: 'Mie Ayam', harga: 15000 },
-  { id: 3, nama: 'Ayam Geprek', harga: 25000 }
+  { id: 3, nama: 'Ayam Geprek', harga: 25000 },
+  { id: 4, nama: 'Sate Ayam', harga: 30000 }
 ];
 
 router.get('/menu', (req, res) => {
