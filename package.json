@@ -1,0 +1,23 @@
+{
+  "name": "pemesanan-makanan",
+  "version": "1.0.0",
+  "description": "Foodly adalah aplikasi web sederhana untuk pemesanan makanan online.  \r Proyek ini dibuat untuk memenuhi tugas *Software Configuration Management & Version Control*.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clarity69/pemesanan-makanan.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Clarity69/pemesanan-makanan/issues"
+  },
+  "homepage": "https://github.com/Clarity69/pemesanan-makanan#readme"
+}
