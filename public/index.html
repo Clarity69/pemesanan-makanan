@@ -1,13 +1,98 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Foodly - Pemesanan Makanan</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Foodly — Pemesanan Makanan</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>🍱 Foodly</h1>
-  <p>Pesan makanan favoritmu secara online!</p>
+  <header class="site-header">
+    <h1 class="logo">🍱 Foodly</h1>
+    <nav>
+      <button id="btn-login" class="btn small">Login</button>
+      <button id="btn-register" class="btn small outline">Register</button>
+      <button id="btn-cart" class="btn small">Keranjang (<span id="cart-count">0</span>)</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h2>Pesan makanan favoritmu, cepat & mudah</h2>
+      <p>Pilih menu di bawah, tambahkan ke keranjang, lalu checkout.</p>
+    </section>
+
+    <section class="menu-section">
+      <h3>Daftar Menu</h3>
+      <div id="menu-grid" class="menu-grid">
+        <!-- Menu items akan di-render oleh script.js -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Login/Register -->
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-content">
+      <button class="modal-close" id="modal-close">&times;</button>
+
+      <div id="auth-forms">
+        <!-- Login form -->
+        <form id="form-login" class="auth-form">
+          <h4>Login</h4>
+          <label>
+            Email
+            <input type="email" id="login-email" required />
+          </label>
+          <label>
+            Password
+            <input type="password" id="login-password" required />
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn">Masuk</button>
+            <button type="button" id="show-register" class="btn outline">Buat Akun</button>
+          </div>
+        </form>
+
+        <!-- Register form -->
+        <form id="form-register" class="auth-form hidden">
+          <h4>Register</h4>
+          <label>
+            Nama Lengkap
+            <input type="text" id="reg-name" required />
+          </label>
+          <label>
+            Email
+            <input type="email" id="reg-email" required />
+          </label>
+          <label>
+            Password
+            <input type="password" id="reg-password" required minlength="6" />
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="btn">Daftar</button>
+            <button type="button" id="show-login" class="btn outline">Sudah punya akun?</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Keranjang sidebar -->
+  <aside id="cart-panel" class="cart-panel hidden" aria-hidden="true">
+    <header>
+      <h4>Keranjang</h4>
+      <button id="close-cart" class="btn small">Tutup</button>
+    </header>
+    <div id="cart-items" class="cart-items">
+      <p class="muted">Keranjang kosong.</p>
+    </div>
+    <footer class="cart-footer">
+      <div class="cart-total">Total: Rp <span id="cart-total">0</span></div>
+      <button id="btn-checkout" class="btn primary">Checkout</button>
+    </footer>
+  </aside>
+
+  <script src="script.js"></script>
 </body>
 </html>

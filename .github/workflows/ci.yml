@@ -1,0 +1,17 @@
+name: Foodly CI/CD
+on:
+  push:
+    tags:
+      - 'v*.*'  # Workflow berjalan setiap kali tag baru (label versi) dibuat
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code (CI_CICD_FILE)
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Tests (CI_TEST_SCRIPT)
+        run: npm test
