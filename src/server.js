@@ -2,6 +2,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const mysql = require("mysql2");
+require("dotenv").config();
 
 // ==== Inisialisasi App ====
 const app = express();
@@ -9,86 +11,91 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public")); // folder frontend (index.html)
+app.use(express.static("public"));
 
-// ==== Data Dummy ====
-let users = [
-  { username: "admin", password: "12345" },
-];
-
-let menu = [
-  { id: 1, name: "Nasi Goreng Spesial", price: 25000 },
-  { id: 2, name: "Ayam Geprek", price: 20000 },
-  { id: 3, name: "Mie Ayam Bakso", price: 22000 },
-  { id: 4, name: "Sate Ayam", price: 28000 },
-  { id: 5, name: "Es Teh Manis", price: 8000 },
-  { id: 6, name: "Jus Alpukat", price: 12000 },
-];
-
-let orders = [];
-
-// ==== Route Root ====
-app.get("/", (req, res) => {
-  res.sendFile("index.html", { root: "public" });
+// ==== Koneksi Database ====
+const db = mysql.createConnection({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASS || "",
+  database: process.env.DB_NAME || "foodly_db",
 });
 
-// ==== API Login ====
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
-
-  if (user) {
-    res.json({ success: true, message: "Login berhasil", username });
-  } else {
-    res.status(401).json({ success: false, message: "Username atau password salah" });
-  }
+db.connect(err => {
+  if (err) throw err;
+  console.log("✅ Terhubung ke database MySQL");
 });
 
-// ==== API Register ====
+// ==== API ====
+
 app.post("/api/register", (req, res) => {
   const { username, password } = req.body;
 
-  if (users.find(u => u.username === username)) {
-    return res.status(400).json({ success: false, message: "Username sudah terdaftar" });
-  }
-
-  users.push({ username, password });
-  res.json({ success: true, message: "Registrasi berhasil" });
+  db.query("SELECT * FROM users WHERE username = ?", [username], (err, results) => {
+    if (results.length > 0) {
+      return res.status(400).json({ success: false, message: "Username sudah terdaftar" });
+    }
+    db.query("INSERT INTO users (username, password) VALUES (?, ?)", [username, password], (err2) => {
+      if (err2) throw err2;
+      res.json({ success: true, message: "Registrasi berhasil" });
+    });
+  });
 });
 
-// ==== API Menu ====
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
+
+  db.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, results) => {
+    if (results.length > 0) {
+      res.json({ success: true, message: "Login berhasil", username });
+    } else {
+      res.status(401).json({ success: false, message: "Username atau password salah" });
+    }
+  });
+});
+
 app.get("/api/menu", (req, res) => {
-  res.json(menu);
+  db.query("SELECT * FROM menu", (err, results) => {
+    if (err) throw err;
+    res.json(results);
+  });
 });
 
-// ==== API Order ====
 app.post("/api/order", (req, res) => {
   const { username, items } = req.body;
-
   if (!username || !items || items.length === 0) {
     return res.status(400).json({ success: false, message: "Data pesanan tidak lengkap" });
   }
 
-  const total = items.reduce((sum, item) => {
-    const menuItem = menu.find(m => m.id === item.id);
-    return sum + (menuItem ? menuItem.price * item.qty : 0);
-  }, 0);
+  let total = 0;
+  const ids = items.map(i => i.id);
 
-  const order = {
-    id: orders.length + 1,
-    username,
-    items,
-    total,
-    date: new Date(),
-  };
+  db.query(`SELECT id, price FROM menu WHERE id IN (?)`, [ids], (err, menuResults) => {
+    if (err) throw err;
 
-  orders.push(order);
-  res.json({ success: true, message: "Pesanan berhasil dibuat", order });
+    items.forEach(i => {
+      const item = menuResults.find(m => m.id === i.id);
+      if (item) total += item.price * i.qty;
+    });
+
+    db.query("INSERT INTO orders (username, total) VALUES (?, ?)", [username, total], (err2, result) => {
+      if (err2) throw err2;
+      const orderId = result.insertId;
+
+      items.forEach(i => {
+        db.query("INSERT INTO order_items (order_id, menu_id, qty) VALUES (?, ?, ?)", [orderId, i.id, i.qty]);
+      });
+
+      res.json({ success: true, message: "Pesanan berhasil dibuat", orderId, total });
+    });
+  });
 });
 
-// ==== API Lihat Semua Order (Admin) ====
 app.get("/api/orders", (req, res) => {
-  res.json(orders);
+  db.query("SELECT * FROM orders ORDER BY created_at DESC", (err, results) => {
+    if (err) throw err;
+    res.json(results);
+  });
 });
 
 // ==== Jalankan Server ====
