@@ -1,41 +1,92 @@
-// --- Ganti bagian login & register (simulasi) ---
-formLogin.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value.trim();
+document.addEventListener('DOMContentLoaded', async () => {
+  const menuGrid = document.getElementById('menu-grid');
+  const cartCount = document.getElementById('cart-count');
+  const cartPanel = document.getElementById('cart-panel');
+  const cartItemsContainer = document.getElementById('cart-items');
+  const cartTotal = document.getElementById('cart-total');
+  const closeCart = document.getElementById('close-cart');
+  const btnCart = document.getElementById('btn-cart');
 
+  let cart = [];
+
+  // 🔹 Ambil data menu dari backend
   try {
-    const res = await fetch('/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    closeModal();
-    alert('Berhasil login: ' + data.user.name);
-  } catch (err) {
-    alert('Gagal login: ' + err.message);
-  }
-});
+    const res = await fetch('/api/menu');
+    const menus = await res.json();
 
-formRegister.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const password = document.getElementById('reg-password').value.trim();
-
-  try {
-    const res = await fetch('/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+    // Kosongkan container dan render menu
+    menuGrid.innerHTML = '';
+    menus.forEach(menu => {
+      const card = document.createElement('div');
+      card.className = 'menu-card';
+      card.innerHTML = `
+        <img src="${menu.gambar || '/img/default.jpg'}" alt="${menu.nama}" class="menu-img" />
+        <h4>${menu.name}</h4>
+        <p>${menu.deskripsi}</p>
+        <strong>Rp ${parseInt(menu.price).toLocaleString('id-ID')}</strong>
+        <button class="btn small" data-id="${menu.id}" data-nama="${menu.nama}" data-harga="${menu.harga}">
+          Tambah ke Keranjang
+        </button>
+      `;
+      menuGrid.appendChild(card);
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    alert('Akun berhasil dibuat!');
-    toggleAuth('login');
   } catch (err) {
-    alert('Gagal register: ' + err.message);
+    console.error('Gagal memuat menu:', err);
+    menuGrid.innerHTML = '<p class="error">Gagal memuat daftar menu 😢</p>';
   }
+
+  // 🔹 Tambah ke keranjang
+  menuGrid.addEventListener('click', e => {
+    if (e.target.tagName === 'BUTTON') {
+      const id = e.target.dataset.id;
+      const nama = e.target.dataset.nama;
+      const harga = parseInt(e.target.dataset.harga);
+
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ id, nama, harga, qty: 1 });
+      }
+
+      updateCart();
+    }
+  });
+
+  // 🔹 Update tampilan keranjang
+  function updateCart() {
+    cartCount.textContent = cart.reduce((sum, i) => sum + i.qty, 0);
+
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = '<p class="muted">Keranjang kosong.</p>';
+      cartTotal.textContent = '0';
+      return;
+    }
+
+    cartItemsContainer.innerHTML = '';
+    let total = 0;
+    cart.forEach(item => {
+      total += item.harga * item.qty;
+
+      const el = document.createElement('div');
+      el.className = 'cart-item';
+      el.innerHTML = `
+        <span>${item.nama}</span>
+        <span>${item.qty}x</span>
+        <span>Rp ${(item.harga * item.qty).toLocaleString('id-ID')}</span>
+      `;
+      cartItemsContainer.appendChild(el);
+    });
+
+    cartTotal.textContent = total.toLocaleString('id-ID');
+  }
+
+  // 🔹 Buka/Tutup keranjang
+  btnCart.addEventListener('click', () => {
+    cartPanel.classList.toggle('hidden');
+  });
+
+  closeCart.addEventListener('click', () => {
+    cartPanel.classList.add('hidden');
+  });
 });
