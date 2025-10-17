@@ -1,97 +1,86 @@
-// ==== Import Dependencies ====
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2');
+const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
 
-// ==== Inisialisasi App ====
 const app = express();
-const PORT = 3000;
-
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public")); // folder frontend (index.html)
 
-// ==== Data Dummy ====
-let users = [
-  { username: "admin", password: "12345" },
-];
-
-let menu = [
-  { id: 1, name: "Nasi Goreng Spesial", price: 25000 },
-  { id: 2, name: "Ayam Geprek", price: 20000 },
-  { id: 3, name: "Mie Ayam Bakso", price: 22000 },
-  { id: 4, name: "Sate Ayam", price: 28000 },
-  { id: 5, name: "Es Teh Manis", price: 8000 },
-  { id: 6, name: "Jus Alpukat", price: 12000 },
-];
-
-let orders = [];
-
-// ==== Route Root ====
-app.get("/", (req, res) => {
-  res.sendFile("index.html", { root: "public" });
+const db = mysql.createConnection({
+  host: '127.0.0.1',
+  port: 3306,
+  user: 'root',
+  password: '',
+  database: 'foodly_db', // ✅ ini sudah benar sesuai
+  multipleStatements: true
 });
 
-// ==== API Login ====
-app.post("/api/login", (req, res) => {
+db.connect(err => {
+  if (err) throw err;
+  console.log('✅ Terhubung ke database MySQL');
+
+  db.query('SELECT DATABASE() AS db;', (err, result) => {
+    if (err) console.error(err);
+    else console.log('📂 Database aktif:', result[0].db);
+  });
+});
+
+
+// 🔹 REGISTER
+app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
+  console.log('📥 Data diterima dari frontend:', username, password); // <== tambahkan ini
 
-  if (user) {
-    res.json({ success: true, message: "Login berhasil", username });
-  } else {
-    res.status(401).json({ success: false, message: "Username atau password salah" });
+  if (!username || !password)
+    return res.status(400).json({ message: 'Username dan password wajib diisi' });
+
+  try {
+    const hashed = await bcrypt.hash(password, 10);
+    const sql = 'INSERT INTO users (username, password) VALUES (?, ?)';
+    console.log('🧠 SQL Query:', sql, [username, hashed]); // <== tambahkan ini
+
+    db.query(sql, [username, hashed], (err) => {
+      if (err) {
+        console.error('❌ SQL Error:', err.sqlMessage);
+        return res.status(500).json({ message: 'Gagal registrasi: ' + err.sqlMessage });
+      }
+      console.log('✅ Registrasi sukses untuk:', username);
+      res.json({ message: 'Registrasi berhasil!' });
+    });
+  } catch (error) {
+    console.error('⚠️ Hash Error:', error.message);
+    res.status(500).json({ message: 'Error server' });
   }
 });
 
-// ==== API Register ====
-app.post("/api/register", (req, res) => {
+// 🔹 LOGIN
+app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
+  db.query('SELECT * FROM users WHERE username = ?', [username], async (err, results) => {
+    if (err || results.length === 0)
+      return res.status(400).json({ message: 'User tidak ditemukan' });
 
-  if (users.find(u => u.username === username)) {
-    return res.status(400).json({ success: false, message: "Username sudah terdaftar" });
-  }
+    const user = results[0];
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(401).json({ message: 'Password salah' });
 
-  users.push({ username, password });
-  res.json({ success: true, message: "Registrasi berhasil" });
+    res.json({ message: 'Login berhasil', username: user.username });
+  });
 });
 
-// ==== API Menu ====
-app.get("/api/menu", (req, res) => {
-  res.json(menu);
+// 🔹 CHECKOUT
+app.post('/api/checkout', (req, res) => {
+  const { username, cart } = req.body;
+  if (!cart || cart.length === 0)
+    return res.status(400).json({ error: 'Keranjang kosong.' });
+
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  db.query('INSERT INTO orders (username, total) VALUES (?, ?)', [username, totalPrice], (err) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json({ message: 'Pesanan berhasil disimpan!', totalPrice });
+  });
 });
 
-// ==== API Order ====
-app.post("/api/order", (req, res) => {
-  const { username, items } = req.body;
-
-  if (!username || !items || items.length === 0) {
-    return res.status(400).json({ success: false, message: "Data pesanan tidak lengkap" });
-  }
-
-  const total = items.reduce((sum, item) => {
-    const menuItem = menu.find(m => m.id === item.id);
-    return sum + (menuItem ? menuItem.price * item.qty : 0);
-  }, 0);
-
-  const order = {
-    id: orders.length + 1,
-    username,
-    items,
-    total,
-    date: new Date(),
-  };
-
-  orders.push(order);
-  res.json({ success: true, message: "Pesanan berhasil dibuat", order });
-});
-
-// ==== API Lihat Semua Order (Admin) ====
-app.get("/api/orders", (req, res) => {
-  res.json(orders);
-});
-
-// ==== Jalankan Server ====
-app.listen(PORT, () => {
-  console.log(`🚀 Server Foodly berjalan di http://localhost:${PORT}`);
-});
+app.listen(3000, () => console.log('🚀 Server berjalan di http://localhost:3000'));
