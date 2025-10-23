@@ -8,6 +8,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+// Serve static files
+app.use(express.static('public'));
+
+// Redirect root to login page
+app.get('/', (req, res) => {
+    res.redirect('/login.html');
+});
+
 const db = mysql.createConnection({
   host: '127.0.0.1',
   port: 3306,
@@ -31,15 +39,18 @@ db.connect(err => {
 // 🔹 REGISTER
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
-  console.log('📥 Data diterima dari frontend:', username, password); // <== tambahkan ini
+  console.log('📥 Data diterima dari frontend:', username, password);
 
-  if (!username || !password)
+  if (!username || !password) {
+    console.log('❌ Username atau password kosong');
     return res.status(400).json({ message: 'Username dan password wajib diisi' });
+  }
 
   try {
+    console.log('🔐 Hashing password untuk:', username);
     const hashed = await bcrypt.hash(password, 10);
     const sql = 'INSERT INTO users (username, password) VALUES (?, ?)';
-    console.log('🧠 SQL Query:', sql, [username, hashed]); // <== tambahkan ini
+    console.log('🧠 SQL Query:', sql, [username, '***']);
 
     db.query(sql, [username, hashed], (err) => {
       if (err) {
@@ -80,6 +91,17 @@ app.post('/api/checkout', (req, res) => {
   db.query('INSERT INTO orders (username, total) VALUES (?, ?)', [username, totalPrice], (err) => {
     if (err) return res.status(500).json({ error: err });
     res.json({ message: 'Pesanan berhasil disimpan!', totalPrice });
+  });
+});
+
+// 🔹 GET MENU
+app.get('/api/menu', (req, res) => {
+  db.query('SELECT * FROM menu', (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching menu:', err);
+      return res.status(500).json({ error: 'Gagal mengambil data menu' });
+    }
+    res.json(results);
   });
 });
 
