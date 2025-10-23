@@ -11,6 +11,15 @@ app.use(bodyParser.json());
 // Serve static files
 app.use(express.static('public'));
 app.use('/assets', express.static('assets'));
+app.use('/assets/menu', express.static('assets/menu'));
+
+// Enable CORS for image files
+app.use((req, res, next) => {
+  if (req.path.match(/\.(jpg|jpeg|png|gif)$/i)) {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+  next();
+});
 
 // Redirect root to login page
 app.get('/', (req, res) => {

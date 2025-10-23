@@ -49,14 +49,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const div = document.createElement('div');
         div.className = 'menu-item';
         div.innerHTML = `
-          <h4>${item.name}</h4>
-          <p>Harga: Rp ${item.price.toLocaleString()}</p>
-          <button class="btn add-cart" 
-                  data-id="${item.id}" 
-                  data-name="${item.name}" 
-                  data-price="${item.price}">
-            Tambah ke Keranjang
-          </button>
+          <img src="${item.image || '/assets/menu/default-food.jpg'}" alt="${item.name}" class="menu-image">
+          <div class="menu-item-content">
+            <div class="menu-item-info">
+              <h4 class="menu-item-name">${item.name}</h4>
+              <p class="menu-item-desc">Best chicken, crispy</p>
+              <button class="btn add-cart" 
+                      data-id="${item.id}" 
+                      data-name="${item.name}" 
+                      data-price="${item.price}">
+                Add to Cart
+              </button>
+            </div>
+            <div class="menu-item-price">Rp ${item.price.toLocaleString()}</div>
+          </div>
         `;
         menuGrid.appendChild(div);
       });

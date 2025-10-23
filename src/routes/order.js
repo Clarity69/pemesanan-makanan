@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const { db } = require('../db');
 
-let menu = [
-  { id: 1, nama: 'Nasi Goreng', harga: 20000 },
-  { id: 2, nama: 'Mie Ayam', harga: 15000 },
-  { id: 3, nama: 'Ayam Geprek', harga: 25000 },
-  { id: 4, nama: 'Sate Ayam', harga: 30000 }
-];
-
-router.get('/menu', (req, res) => {
-  res.json(menu);
+router.get('/menu', async (req, res) => {
+  try {
+    const [menu] = await db.query('SELECT id, name, price, image FROM menu');
+    res.json(menu);
+  } catch (error) {
+    console.error('Error fetching menu:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 router.post('/pesan', (req, res) => {
