@@ -20,3 +20,10 @@
 .menu-item:hover {
   transform: translateY(-4px);
 }
+
+.menu-item-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 8px 0 16px;
+  line-height: 1.4;
+}
