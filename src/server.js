@@ -10,6 +10,7 @@ app.use(bodyParser.json());
 
 // Serve static files
 app.use(express.static('public'));
+app.use('/assets', express.static('assets'));
 
 // Redirect root to login page
 app.get('/', (req, res) => {

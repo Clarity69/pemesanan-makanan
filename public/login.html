@@ -6,86 +6,171 @@
     <title>Login - Foodly</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #333;
+        }
         .login-container {
             max-width: 400px;
-            margin: 100px auto;
-            padding: 20px;
+            margin: 80px auto;
+            padding: 32px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(230, 126, 37, 0.1);
+        }
+        .login-container h2 {
+            color: #e67e25;
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0 0 24px 0;
+            text-align: center;
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
         }
         .form-group input {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #e67e25;
+            box-shadow: 0 0 0 3px rgba(230, 126, 37, 0.1);
         }
         .login-btn {
             width: 100%;
-            padding: 10px;
-            background: #e67e22;
+            padding: 12px;
+            background: #e67e25;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
         .login-btn:hover {
-            background: #e67e25;
+            background: #d67321;
+            transform: translateY(-1px);
+        }
+        .login-btn:active {
+            transform: translateY(0);
         }
         .error-message {
-            color: red;
+            color: #dc3545;
             margin-top: 10px;
             display: none;
+            font-size: 14px;
+            text-align: center;
+        }
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .toggle-form a {
+            color: #e67e25;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .toggle-form a:hover {
+            color: #d67321;
+            text-decoration: underline;
+        }
+        #registerSection {
+            display: none;
+        }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div id="loginSection">
-            <h2>Login to Foodly</h2>
+            <h2>Welcome to BiteHub</h2>
             <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle">👁️</button>
+                    </div>
                 </div>
                 <button type="submit" class="login-btn">Login</button>
                 <p class="error-message" id="loginError"></p>
             </form>
-            <p style="text-align: center; margin-top: 20px;">
-                <a href="#" id="showRegister">Don't have an account?</a>
-            </p>
+            <div class="toggle-form">
+                <a href="#" id="showRegister">Don't have an account? Sign up</a>
+            </div>
         </div>
 
-        <div id="registerSection" style="display: none;">
-            <h2>Register for Foodly</h2>
+        <div id="registerSection">
+            <h2>Create Account</h2>
             <form id="registerForm">
                 <div class="form-group">
                     <label for="regUsername">Username</label>
-                    <input type="text" id="regUsername" name="regUsername" required>
+                    <input type="text" id="regUsername" name="regUsername" placeholder="Choose a username" required>
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Password</label>
-                    <input type="password" id="regPassword" name="regPassword" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="regPassword" name="regPassword" placeholder="Create a password" required>
+                        <button type="button" class="password-toggle">👁️</button>
+                    </div>
                 </div>
-                <button type="submit" class="login-btn">Register</button>
+                <button type="submit" class="login-btn">Create Account</button>
                 <p class="error-message" id="registerError"></p>
             </form>
-            <p style="text-align: center; margin-top: 20px;">
-                <a href="#" id="showLogin">Already have an account? Login here</a>
-            </p>
+            <div class="toggle-form">
+                <a href="#" id="showLogin">Already have an account? Login</a>
+            </div>
         </div>
     </div>
     <script src="login.js"></script>
+    <script>
+        // Password visibility toggle
+        document.querySelectorAll('.password-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const passwordInput = this.parentElement.querySelector('input');
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    this.textContent = '👁️‍🗨️';
+                } else {
+                    passwordInput.type = 'password';
+                    this.textContent = '👁️';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
